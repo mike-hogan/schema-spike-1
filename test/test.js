@@ -1,9 +1,10 @@
-var assert = require('assert');
+"use strict";
+const expect = require("chai").expect;
+const store = require("../lib/schemaStore.js").store;
 
-describe('Array', function() {
-  describe('#indexOf()', function() {
-    it('should return -1 when the value is not present', function() {
-      assert.equal(-1, [1,2,3].indexOf(4));
+
+describe('document storage against schema', function() {
+    it('should work with an empty doc and an empty schema', function() {
+        expect(store({},{})).to.deep.equal({});
     });
-  });
 });
