@@ -8,7 +8,7 @@ describe('document storage against schema', function () {
         root: {
             nestedOne: {
                 nestedTwo: {
-                    type:"array"
+                    type: "array"
                 }
             }
         }
@@ -57,6 +57,50 @@ describe('document storage against schema', function () {
         };
 
         const storedDocument = store("root/nestedOne/nestedTwo[1]", {name: "mary"}, schema, existingDocument);
+        expect(storedDocument).to.deep.equal(expectedDocument);
+    });
+
+    it('should allow nested array indexing', function () {
+
+        const schema = {
+            root: {
+                nestedOne: {
+                    nestedTwo: {
+                        type: "array",
+                        nestedThreePointOne: {},
+                        nestedThreePointTwo: {}
+                    }
+                }
+            }
+        };
+
+        const existingDocument = {
+            root: {
+                nestedOne: {
+                    nestedTwo: [
+                        {
+                            nestedThreePointOne: {},
+                            nestedThreePointTwo: {}
+                        }
+                    ]
+                }
+            }
+        };
+
+        const expectedDocument = {
+            root: {
+                nestedOne: {
+                    nestedTwo: [
+                        {
+                            nestedThreePointOne: {},
+                            nestedThreePointTwo: {name: "mary"}
+                        }
+                    ]
+                }
+            }
+        };
+
+        const storedDocument = store("root/nestedOne/nestedTwo[0]/nestedThreePointTwo", {name: "mary"}, schema, existingDocument);
         expect(storedDocument).to.deep.equal(expectedDocument);
     });
 });
