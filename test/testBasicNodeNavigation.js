@@ -62,4 +62,9 @@ describe('document storage against schema', function() {
         var storedDocument = store("root/nestedOne/nestedTwo",{name:"fred"},schema, existingDocument);
         expect(storedDocument).to.deep.equal(expectedDocument);
     });
+
+    it('should reject paths that dont match schema', function() {
+        var storedDocument = store("root/nestedOne/nestedFive/nestedSix",{name:"fred"},schema, {});
+        expect(storedDocument).to.equal("Invalid path 'root/nestedOne/nestedFive/nestedSix' at 'root/nestedOne/nestedFive'");
+    });
 });
