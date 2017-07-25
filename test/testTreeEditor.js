@@ -2,7 +2,18 @@
 const expect = require("chai").expect;
 const TreeEditor = require("../lib/treeEditor").TreeEditor;
 
-describe('TreeWalker', function () {
+function StubIdGenerator (cannedId) {
+    this.cannedId = cannedId;
+}
+
+StubIdGenerator.prototype.generateId = function() {
+    return this.cannedId;
+};
+
+
+describe('TreeEditor', function () {
+    const idGenerator = new StubIdGenerator("id-1");
+
     const mortgageApplicationSchema = {
         types: {
             property: {
@@ -56,7 +67,7 @@ describe('TreeWalker', function () {
                 }
             }
         };
-        new TreeEditor(mortgageApplicationSchema).setExistingNode(mortgageApplication,"/applicant/personalDetails", {
+        new TreeEditor(mortgageApplicationSchema, idGenerator).setExistingNode(mortgageApplication,"/applicant/personalDetails", {
             firstName: "Charlie", lastName: "Chaplin"
         });
         expect(mortgageApplication).to.deep.equal({
@@ -76,7 +87,7 @@ describe('TreeWalker', function () {
                 }
             }
         };
-        new TreeEditor(mortgageApplicationSchema).removeExistingNode(mortgageApplication,"/applicant/personalDetails");
+        new TreeEditor(mortgageApplicationSchema, idGenerator).removeExistingNode(mortgageApplication,"/applicant/personalDetails");
         expect(mortgageApplication).to.deep.equal({
             applicant: {}
         });
@@ -84,7 +95,7 @@ describe('TreeWalker', function () {
 
     it('should create path of object nodes in empty document', function () {
         const mortgageApplication = {};
-        new TreeEditor(mortgageApplicationSchema).createNode(mortgageApplication,"/applicant/personalDetails", {
+        new TreeEditor(mortgageApplicationSchema, idGenerator).createNode(mortgageApplication,"/applicant/personalDetails", {
             firstName: "Charlie", lastName: "Chaplin"
         });
         expect(mortgageApplication).to.deep.equal({
@@ -104,7 +115,7 @@ describe('TreeWalker', function () {
                 {type:"cash",id:"id-2",uri:"/collateral/id-2", cash:{currency:"USD", value:1400}}
             ]
         };
-        new TreeEditor(mortgageApplicationSchema).setExistingNode(mortgageApplication,"/collateral/id-22", {cash:{currency:"EUR", value:999}});
+        new TreeEditor(mortgageApplicationSchema, idGenerator).setExistingNode(mortgageApplication,"/collateral/id-22", {cash:{currency:"EUR", value:999}});
         expect(mortgageApplication).to.deep.equal({
                 collateral: [
                     {type:"cash",id:"id-1",uri:"/collateral/id-1", cash:{currency:"GBP", value:1000}},
@@ -116,7 +127,7 @@ describe('TreeWalker', function () {
 
     it('should create path through array nodes of empty document', function () {
         const mortgageApplication = {};
-        new TreeEditor(mortgageApplicationSchema).createNode(mortgageApplication,"/collateral", {cash:{currency:"EUR", value:999}});
+        new TreeEditor(mortgageApplicationSchema, idGenerator).createNode(mortgageApplication,"/collateral", {cash:{currency:"EUR", value:999}});
         expect(mortgageApplication).to.deep.equal({
             collateral: [
                 {type:"cash",id:"id-1",uri:"/collateral/id-1", cash:{currency:"EUR", value:999}},
@@ -132,7 +143,7 @@ describe('TreeWalker', function () {
                 {type:"cash",id:"id-2",uri:"/collateral/id-2", cash:{currency:"USD", value:1400}}
             ]
         };
-        new TreeEditor(mortgageApplicationSchema).removeExistingNode(mortgageApplication,"/collateral/id-22");
+        new TreeEditor(mortgageApplicationSchema, idGenerator).removeExistingNode(mortgageApplication,"/collateral/id-22");
         expect(mortgageApplication).to.deep.equal({
             collateral: [
                 {type:"cash",id:"id-1",uri:"/collateral/id-1", cash:{currency:"GBP", value:1000}},
@@ -145,7 +156,7 @@ describe('TreeWalker', function () {
     it('should enforce allowed array types when creating array nodes', function () {
         const mortgageApplication = {};
         try {
-            new TreeEditor(mortgageApplicationSchema).createNode(mortgageApplication,"/collateral", {
+            new TreeEditor(mortgageApplicationSchema, idGenerator).createNode(mortgageApplication,"/collateral", {
                 unknownCollateralType: {
                     currency: "EUR",
                     value: 999
