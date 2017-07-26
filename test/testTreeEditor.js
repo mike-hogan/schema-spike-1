@@ -201,7 +201,7 @@ describe('TreeEditor', function () {
         idGenerator.reset();
         const complexDocument = {};
         const complexTreeEditor = new TreeEditor(nestedArrayElementSchema, idGenerator);
-        complexTreeEditor.createNode(complexDocument,"/mortgage/assurance/collateral/property",{address:{postcode:"WC1 2EX"}});
+        complexTreeEditor.createNode(complexDocument,"/mortgage/assurance/collateral/property/address",{postcode:"WC1 2EX"});
         complexTreeEditor.createNode(complexDocument,"/mortgage/assurance/collateral/property",{valuation:{value:23000, valuationDate:"13-02-2014"}});
         expect(complexDocument).to.deep.equal({
             mortgage:{
