@@ -2,17 +2,22 @@
 const expect = require("chai").expect;
 const TreeEditor = require("../lib/treeEditor").TreeEditor;
 
-function StubIdGenerator (cannedId) {
-    this.cannedId = cannedId;
+function StubIdGenerator () {
+    this.cannedId = 0;
 }
 
+StubIdGenerator.prototype.reset = function() {
+    this.cannedId = 0;
+};
+
 StubIdGenerator.prototype.generateId = function() {
-    return this.cannedId;
+    this.cannedId = this.cannedId + 1;
+    return "id-" + this.cannedId;
 };
 
 
 describe('TreeEditor', function () {
-    const idGenerator = new StubIdGenerator("id-1");
+    const idGenerator = new StubIdGenerator();
 
     const mortgageApplicationSchema = {
         types: {
@@ -127,10 +132,10 @@ describe('TreeEditor', function () {
 
     it('should create path through array nodes of empty document', function () {
         const mortgageApplication = {};
-        new TreeEditor(mortgageApplicationSchema, idGenerator).createNode(mortgageApplication,"/collateral", {cash:{currency:"EUR", value:999}});
+        new TreeEditor(mortgageApplicationSchema, idGenerator).createNode(mortgageApplication,"/collateral/cash", {currency:"EUR", value:999});
         expect(mortgageApplication).to.deep.equal({
             collateral: [
-                {type:"cash",id:"id-1",uri:"/collateral/id-1", cash:{currency:"EUR", value:999}},
+                {type:"cash",id:"id-1",uri:"/collateral/id-1", currency:"EUR", value:999},
             ]
         });
     });
@@ -166,5 +171,74 @@ describe('TreeEditor', function () {
         } catch (e) {
             expect(e.message).to.equal("Attempting to set invalid array type at '/collateral'")
         }
+    });
+
+    const nestedArrayElementSchema = {
+        types:{
+            property:{
+                address:{
+                    fields:["postcode"],
+                    postcode:{type:"string"}
+                },
+                valuation:{
+                    fields:["value","valuationDate"],
+                    value:{type:"number"},
+                    valuationDate:{type:"date"}
+                }
+            }
+        },
+        mortgage:{
+            assurance:{
+                collateral:{
+                    type:"array",
+                    allowedTypes:["property"]
+                }
+            }
+        }
+    };
+
+    it('should support creating parts of a document contained in an array', function () {
+        idGenerator.reset();
+        const complexDocument = {};
+        const complexTreeEditor = new TreeEditor(nestedArrayElementSchema, idGenerator);
+        complexTreeEditor.createNode(complexDocument,"/mortgage/assurance/collateral/property",{address:{postcode:"WC1 2EX"}});
+        complexTreeEditor.createNode(complexDocument,"/mortgage/assurance/collateral/property",{valuation:{value:23000, valuationDate:"13-02-2014"}});
+        expect(complexDocument).to.deep.equal({
+            mortgage:{
+                assurance:{
+                    collateral:[{
+                            id: "id-1",
+                            type: "property",
+                            uri: "/mortgage/assurance/collateral/id-1",
+                            address:{postcode:"WC1 2EX"}
+                        },
+                        {
+                            id: "id-2",
+                            type: "property",
+                            uri: "/mortgage/assurance/collateral/id-2",
+                            valuation:{value:23000, valuationDate:"13-02-2014"}}
+                    ]
+                }
+            }
+        });
+
+        complexTreeEditor.removeExistingNode(complexDocument,"/mortgage/assurance/collateral/id-1/address");
+        expect(complexDocument).to.deep.equal({
+            mortgage:{
+                assurance:{
+                    collateral:[{
+                        id: "id-1",
+                        type: "property",
+                        uri: "/mortgage/assurance/collateral/id-1"
+                    },
+                        {
+                            id: "id-2",
+                            type: "property",
+                            uri: "/mortgage/assurance/collateral/id-2",
+                            valuation:{value:23000, valuationDate:"13-02-2014"}}
+                    ]
+                }
+            }
+        });
     });
 });
