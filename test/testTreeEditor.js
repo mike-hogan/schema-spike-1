@@ -100,9 +100,10 @@ describe('TreeEditor', function () {
 
     it('should create path of object nodes in empty document', function () {
         const mortgageApplication = {};
-        new TreeEditor(mortgageApplicationSchema, idGenerator).createNode(mortgageApplication,"/applicant/personalDetails", {
+        const uri = new TreeEditor(mortgageApplicationSchema, idGenerator).createNode(mortgageApplication,"/applicant/personalDetails", {
             firstName: "Charlie", lastName: "Chaplin"
         });
+        expect(uri).to.equal("/applicant/personalDetails");
         expect(mortgageApplication).to.deep.equal({
             applicant: {
                 personalDetails: {
@@ -132,7 +133,8 @@ describe('TreeEditor', function () {
 
     it('should create path through array nodes of empty document', function () {
         const mortgageApplication = {};
-        new TreeEditor(mortgageApplicationSchema, idGenerator).createNode(mortgageApplication,"/collateral/cash", {currency:"EUR", value:999});
+        const uri = new TreeEditor(mortgageApplicationSchema, idGenerator).createNode(mortgageApplication,"/collateral/cash", {currency:"EUR", value:999});
+        expect(uri).to.equal('/collateral/id-1');
         expect(mortgageApplication).to.deep.equal({
             collateral: [
                 {type:"cash",id:"id-1",uri:"/collateral/id-1", currency:"EUR", value:999},
@@ -201,8 +203,10 @@ describe('TreeEditor', function () {
         idGenerator.reset();
         const complexDocument = {};
         const complexTreeEditor = new TreeEditor(nestedArrayElementSchema, idGenerator);
-        complexTreeEditor.createNode(complexDocument,"/mortgage/assurance/collateral/property/address",{postcode:"WC1 2EX"});
-        complexTreeEditor.createNode(complexDocument,"/mortgage/assurance/collateral/property",{valuation:{value:23000, valuationDate:"13-02-2014"}});
+        let uri = complexTreeEditor.createNode(complexDocument,"/mortgage/assurance/collateral/property/address",{postcode:"WC1 2EX"});
+        expect(uri).to.equal('/mortgage/assurance/collateral/id-1/address');
+        uri = complexTreeEditor.createNode(complexDocument,"/mortgage/assurance/collateral/property",{valuation:{value:23000, valuationDate:"13-02-2014"}});
+        expect(uri).to.equal('/mortgage/assurance/collateral/id-2');
         expect(complexDocument).to.deep.equal({
             mortgage:{
                 assurance:{
